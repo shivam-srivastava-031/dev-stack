@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Layers } from "lucide-react";
+import { ArrowLeft, Layers } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
@@ -100,6 +100,16 @@ const Auth = () => {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
       <div className="pointer-events-none absolute inset-0 bg-gradient-glow" />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate(-1)}
+        className="absolute left-4 top-4 z-20 gap-1.5"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Button>
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-primary shadow-glow">
