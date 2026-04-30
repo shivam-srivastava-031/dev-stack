@@ -30,8 +30,8 @@ app.use((req, res) => {
   }
 });
 
-// Bind to 0.0.0.0 to ensure the platform can reach the container
-app.listen(PORT, '0.0.0.0', () => {
+// Bind to PORT to ensure the platform can reach the container
+app.listen(PORT, () => {
   console.log(`🚀 Server is listening on port ${PORT}`);
   console.log(`[INFO] Current working directory: ${process.cwd()}`);
   console.log(`[INFO] Node version: ${process.version}`);
