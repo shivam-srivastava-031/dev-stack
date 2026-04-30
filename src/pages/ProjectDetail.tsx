@@ -40,6 +40,11 @@ type Task = {
   created_by: string;
 };
 
+const projectSchema = z.object({
+  name: z.string().trim().min(1, "Name required").max(80),
+  description: z.string().trim().max(500).optional(),
+});
+
 const taskSchema = z.object({
   title: z.string().trim().min(1, "Title required").max(120),
   description: z.string().trim().max(2000).optional(),
@@ -47,6 +52,11 @@ const taskSchema = z.object({
   priority: z.enum(["low", "medium", "high"]),
   due_date: z.string().optional(),
   assignee_id: z.string().optional(),
+});
+
+const memberInviteSchema = z.object({
+  email: z.string().trim().email("Invalid email address").toLowerCase(),
+  role: z.enum(["admin", "member"]),
 });
 
 const ProjectDetail = () => {
@@ -60,12 +70,30 @@ const ProjectDetail = () => {
   const [taskOpen, setTaskOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [updatingProject, setUpdatingProject] = useState(false);
 
   const myRole = useMemo(
     () => members.find((m) => m.user_id === user?.id)?.role,
     [members, user]
   );
   const isAdmin = myRole === "admin";
+  const isOwner = project?.owner_id === user?.id;
+
+  const checkPermission = (action: "edit_project" | "delete_project" | "manage_members" | "delete_task" | "edit_task", task?: Task) => {
+    if (action === "delete_project") return isOwner;
+    if (isAdmin) return true;
+    switch (action) {
+      case "edit_task":
+        return task?.assignee_id === user?.id || task?.created_by === user?.id;
+      case "delete_task":
+        return task?.created_by === user?.id;
+      default:
+        return false;
+    }
+  };
 
   const fetchAll = async () => {
     if (!id) return;
@@ -82,18 +110,24 @@ const ProjectDetail = () => {
         .order("created_at", { ascending: false }),
     ]);
     if (pErr || !p) {
+      console.error("Fetch project error:", pErr);
       toast.error("Project not found");
       navigate("/projects");
       return;
     }
     const memberRows = (m as { id: string; user_id: string; role: "admin" | "member" }[]) ?? [];
     const userIds = memberRows.map((r) => r.user_id);
-    let profilesById: Record<string, Member["profile"]> = {};
+    let profilesById: Record<string, { full_name: string | null; email: string | null; avatar_url: string | null }> = {};
     if (userIds.length) {
-      const { data: profs } = await supabase
+      const { data: profs, error: profsErr } = await supabase
         .from("profiles")
         .select("id, full_name, email, avatar_url")
         .in("id", userIds);
+      
+      if (profsErr) {
+        console.error("Fetch profiles error:", profsErr);
+      }
+
       (profs ?? []).forEach((p) => {
         profilesById[p.id] = { full_name: p.full_name, email: p.email, avatar_url: p.avatar_url };
       });
@@ -108,6 +142,43 @@ const ProjectDetail = () => {
     fetchAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const handleUpdateProject = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!id || !project) return;
+    const fd = new FormData(e.currentTarget);
+    const parsed = projectSchema.safeParse({
+      name: fd.get("name"),
+      description: fd.get("description") || undefined,
+    });
+    if (!parsed.success) {
+      toast.error(parsed.error.errors[0].message);
+      return;
+    }
+    setUpdatingProject(true);
+    const { error } = await supabase.from("projects").update({
+      name: parsed.data.name,
+      description: parsed.data.description ?? null,
+    }).eq("id", id);
+    setUpdatingProject(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Project updated");
+    setProject({ ...project, ...parsed.data, description: parsed.data.description ?? null });
+  };
+
+  const handleDeleteProject = async () => {
+    if (!id) return;
+    const { error } = await supabase.from("projects").delete().eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Project deleted");
+    navigate("/projects");
+  };
 
   const handleSaveTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -133,6 +204,12 @@ const ProjectDetail = () => {
       due_date: parsed.data.due_date ? new Date(parsed.data.due_date).toISOString() : null,
       assignee_id: parsed.data.assignee_id && parsed.data.assignee_id !== "none" ? parsed.data.assignee_id : null,
     };
+    
+    // Safety check: ensure assignee is a member
+    if (payload.assignee_id && !members.some(m => m.user_id === payload.assignee_id)) {
+      toast.error("Assignee must be a member of this project");
+      return;
+    }
     let error;
     if (editingTask) {
       ({ error } = await supabase.from("tasks").update(payload).eq("id", editingTask.id));
@@ -176,9 +253,15 @@ const ProjectDetail = () => {
     e.preventDefault();
     if (!id) return;
     const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email") || "").trim().toLowerCase();
-    const role = String(fd.get("role") || "member") as "admin" | "member";
-    if (!email) return;
+    const parsed = memberInviteSchema.safeParse({
+      email: fd.get("email"),
+      role: fd.get("role"),
+    });
+    if (!parsed.success) {
+      toast.error(parsed.error.errors[0].message);
+      return;
+    }
+    const { email, role } = parsed.data;
     // Find profile by email
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
@@ -222,6 +305,22 @@ const ProjectDetail = () => {
     fetchAll();
   };
 
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           (t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      const matchesPriority = priorityFilter === "all" || t.priority === priorityFilter;
+      const matchesAssignee = assigneeFilter === "all" || t.assignee_id === assigneeFilter;
+      return matchesSearch && matchesPriority && matchesAssignee;
+    });
+  }, [tasks, searchQuery, priorityFilter, assigneeFilter]);
+
+  const grouped = {
+    todo: filteredTasks.filter((t) => t.status === "todo"),
+    in_progress: filteredTasks.filter((t) => t.status === "in_progress"),
+    done: filteredTasks.filter((t) => t.status === "done"),
+  };
+
   if (loading || !project) {
     return (
       <AppShell>
@@ -229,12 +328,6 @@ const ProjectDetail = () => {
       </AppShell>
     );
   }
-
-  const grouped = {
-    todo: tasks.filter((t) => t.status === "todo"),
-    in_progress: tasks.filter((t) => t.status === "in_progress"),
-    done: tasks.filter((t) => t.status === "done"),
-  };
 
   return (
     <AppShell>
@@ -263,9 +356,55 @@ const ProjectDetail = () => {
         <TabsList>
           <TabsTrigger value="board">Board</TabsTrigger>
           <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
+          {isAdmin && <TabsTrigger value="settings">Settings</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="board" className="mt-6">
+        <TabsContent value="board" className="mt-6 space-y-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Input
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-secondary/40"
+              />
+            </div>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-[130px] bg-secondary/40">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priorities</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+              <SelectTrigger className="w-[160px] bg-secondary/40">
+                <SelectValue placeholder="Assignee" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Assignees</SelectItem>
+                <SelectItem value="none">Unassigned</SelectItem>
+                {members.map((m) => (
+                  <SelectItem key={m.user_id} value={m.user_id}>
+                    {m.profile?.full_name ?? m.profile?.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(searchQuery || priorityFilter !== "all" || assigneeFilter !== "all") && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { setSearchQuery(""); setPriorityFilter("all"); setAssigneeFilter("all"); }}
+                className="text-xs"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
             {(["todo", "in_progress", "done"] as const).map((col) => (
               <Card key={col} className="border-border/60 bg-card/40 backdrop-blur-xl">
@@ -288,7 +427,11 @@ const ProjectDetail = () => {
                         key={task.id}
                         type="button"
                         onClick={() => canEdit ? (setEditingTask(task), setTaskOpen(true)) : null}
-                        className="w-full rounded-lg border border-border/60 bg-secondary/40 p-3 text-left transition-colors hover:bg-secondary"
+                        className={cn(
+                          "w-full rounded-lg border border-border/60 bg-secondary/40 p-3 text-left transition-all hover:bg-secondary hover:shadow-md",
+                          task.priority === "high" && "border-destructive/30",
+                          task.priority === "medium" && "border-warning/30"
+                        )}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="text-sm font-medium">{task.title}</div>
@@ -317,36 +460,41 @@ const ProjectDetail = () => {
                           )}
                         </div>
                         {canEdit && (
-                          <div className="mt-3 flex flex-wrap gap-1">
-                            {(["todo", "in_progress", "done"] as const).filter((s) => s !== task.status).map((s) => (
-                              <Badge
-                                key={s}
-                                variant="outline"
-                                onClick={(e) => { e.stopPropagation(); handleQuickStatus(task, s); }}
-                                className="cursor-pointer text-[10px] hover:bg-primary/20"
-                              >
-                                → {s.replace("_", " ")}
-                              </Badge>
-                            ))}
-                            {isAdmin && (
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-1">
+                            <div className="flex flex-wrap gap-1">
+                              {(["todo", "in_progress", "done"] as const).filter((s) => s !== task.status).map((s) => (
+                                <Badge
+                                  key={s}
+                                  variant="outline"
+                                  onClick={(e) => { e.stopPropagation(); handleQuickStatus(task, s); }}
+                                  className="cursor-pointer text-[10px] hover:bg-primary/20"
+                                >
+                                  → {s.replace("_", " ")}
+                                </Badge>
+                              ))}
+                            </div>
+                            {checkPermission("delete_task", task) && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Badge
-                                    variant="outline"
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
                                     onClick={(e) => e.stopPropagation()}
-                                    className="cursor-pointer border-destructive/40 text-[10px] text-destructive hover:bg-destructive/15"
                                   >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Badge>
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                                   <AlertDialogHeader>
                                     <AlertDialogTitle>Delete task?</AlertDialogTitle>
-                                    <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+                                    <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteTask(task.id)}>Delete</AlertDialogAction>
+                                    <AlertDialogAction onClick={() => handleDeleteTask(task.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                      Delete
+                                    </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
@@ -366,25 +514,28 @@ const ProjectDetail = () => {
           <Card className="border-border/60 bg-card/60 backdrop-blur-xl">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Team members</CardTitle>
-              {isAdmin && (
+              {checkPermission("manage_members") && (
                 <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm"><Plus className="mr-1 h-4 w-4" /> Add member</Button>
+                    <Button size="sm" variant="outline" className="h-8 gap-1">
+                      <Plus className="h-3.5 w-3.5" /> Invite
+                    </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Add a member</DialogTitle>
+                      <DialogTitle>Invite team member</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleInvite} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="invite-email">Email</Label>
-                        <Input id="invite-email" name="email" type="email" required placeholder="teammate@company.com" />
-                        <p className="text-xs text-muted-foreground">User must already have a Stack account.</p>
+                        <Label htmlFor="email">Email address</Label>
+                        <Input id="email" name="email" type="email" placeholder="colleague@example.com" required />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="invite-role">Role</Label>
+                        <Label htmlFor="role">Role</Label>
                         <Select name="role" defaultValue="member">
-                          <SelectTrigger id="invite-role"><SelectValue /></SelectTrigger>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="member">Member</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
@@ -401,17 +552,24 @@ const ProjectDetail = () => {
             </CardHeader>
             <CardContent className="space-y-2">
               {members.map((m) => (
-                <div key={m.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
+                <div key={m.id} className="group flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3 transition-colors hover:bg-secondary/60">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-sm font-medium text-primary-foreground">
-                      {(m.profile?.full_name || m.profile?.email || "?").slice(0, 1).toUpperCase()}
+                    <div className="relative">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-sm font-medium text-primary-foreground shadow-glow">
+                        {(m.profile?.full_name || m.profile?.email || "?").slice(0, 1).toUpperCase()}
+                      </div>
+                      {m.role === "admin" && (
+                        <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-background p-0.5 shadow-sm">
+                          <Crown className="h-2.5 w-2.5 text-warning" />
+                        </div>
+                      )}
                     </div>
                     <div>
                       <div className="text-sm font-medium">{m.profile?.full_name ?? m.profile?.email}</div>
                       <div className="text-xs text-muted-foreground">{m.profile?.email}</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                     {isAdmin && m.user_id !== project.owner_id ? (
                       <Select value={m.role} onValueChange={(v) => handleChangeRole(m.id, v as "admin" | "member")}>
                         <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
@@ -451,6 +609,96 @@ const ProjectDetail = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="settings" className="mt-6">
+            <div className="grid gap-6">
+              <Card className="border-border/60 bg-card/60 backdrop-blur-xl">
+                <CardHeader>
+                  <CardTitle className="text-base">Project Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleUpdateProject} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="project-name">Name</Label>
+                      <Input id="project-name" name="name" defaultValue={project.name} required maxLength={80} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="project-desc">Description</Label>
+                      <Textarea id="project-desc" name="description" defaultValue={project.description ?? ""} maxLength={500} rows={3} />
+                    </div>
+                    <Button type="submit" disabled={updatingProject}>
+                      {updatingProject ? "Saving..." : "Save changes"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              <Card className="border-destructive/20 bg-destructive/5 backdrop-blur-xl">
+                <CardHeader>
+                  <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Deleting a project is permanent and will remove all associated tasks and member associations.
+                  </p>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">Delete Project</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the project
+                          "<strong>{project.name}</strong>" and all its data.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Delete Project
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/60 bg-card/60 backdrop-blur-xl">
+                <CardHeader>
+                  <CardTitle className="text-base">Role Permissions Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-2">
+                        <div className="font-semibold text-warning">Admin</div>
+                        <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+                          <li>Edit project details</li>
+                          <li>Delete project</li>
+                          <li>Invite & remove members</li>
+                          <li>Change member roles</li>
+                          <li>Manage all tasks</li>
+                        </ul>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="font-semibold">Member</div>
+                        <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+                          <li>View project board</li>
+                          <li>Create new tasks</li>
+                          <li>Edit assigned tasks</li>
+                          <li>Delete own tasks</li>
+                          <li className="text-destructive/60">Cannot manage project</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
 
       <Dialog open={taskOpen} onOpenChange={(o) => { setTaskOpen(o); if (!o) setEditingTask(null); }}>

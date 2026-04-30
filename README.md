@@ -9,11 +9,12 @@ A modern, full-stack team collaboration platform for planning projects, assignin
 
 ## 🎯 Features
 
-- 🔐 **Secure Authentication** - Email/password and OAuth via Supabase
-- 📊 **Project Management** - Create, organize, and manage team projects
-- ✅ **Task Tracking** - Full task lifecycle with status, priority, and assignments
-- 👥 **Team Collaboration** - Invite team members with role-based permissions (Admin/Member)
-- 📱 **Responsive Design** - Beautiful UI that works on desktop, tablet, and mobile
+- 🔐 **Secure Authentication** - Email/password and OAuth (Google) via Supabase
+- 📊 **Advanced Dashboard** - Real-time task status breakdown and personalized welcome
+- ✅ **Task Tracking** - Full lifecycle with priority-coded indicators and Kanban board
+- 👥 **Strict RBAC** - Robust Role-Based Access Control (Owner, Admin, Member)
+- 🛡️ **Harden Security** - Row-Level Security (RLS) with optimized database relationships
+- 📱 **Premium UI** - High-end glassmorphism design with modern animations
 - 🔄 **Real-time Data** - Live synchronization via Supabase PostgREST API
 - 🛡️ **Row-Level Security** - Database-level access control for data protection
 - ⚡ **Type-Safe APIs** - Full REST API layer with TypeScript interfaces
@@ -87,9 +88,14 @@ bun dev
 npm run dev
 ```
 
-Visit `http://localhost:8080` in your browser.
+Visit `http://localhost:5173` in your browser.
 
-### 4. Test the App
+### 4. Database Setup
+1. Create a new Supabase project.
+2. Run the SQL migration located in `supabase/migrations/20260430123214_...sql` followed by the refinement and RBAC scripts.
+3. Update your `.env.local` with the new project credentials.
+
+### 5. Test the App
 
 1. Sign up with email and password
 2. Create a new project
@@ -326,7 +332,7 @@ Pre-built components for rapid development:
 
 ```bash
 # Development
-bun dev              # Start dev server at http://localhost:8080
+bun dev              # Start dev server at http://localhost:5173
 bun dev --host       # Accessible from network
 
 # Building

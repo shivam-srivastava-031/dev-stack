@@ -141,8 +141,8 @@ const Auth = () => {
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
-    if (result.error) {
-      toast.error(friendlyAuthError(result.error as never) || "Google sign-in failed");
+    if (error) {
+      toast.error(friendlyAuthError(error as never) || "Google sign-in failed");
       setSubmitting(false);
       return;
     }
