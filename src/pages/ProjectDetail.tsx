@@ -302,9 +302,9 @@ const ProjectDetail = () => {
                             {assignee ? (
                               <span className="flex items-center gap-1">
                                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-primary text-[10px] font-medium text-primary-foreground">
-                                  {(assignee.profiles?.full_name || assignee.profiles?.email || "?").slice(0, 1).toUpperCase()}
+                                  {(assignee.profile?.full_name || assignee.profile?.email || "?").slice(0, 1).toUpperCase()}
                                 </span>
-                                <span className="truncate max-w-[80px]">{assignee.profiles?.full_name ?? assignee.profiles?.email}</span>
+                                <span className="truncate max-w-[80px]">{assignee.profile?.full_name ?? assignee.profile?.email}</span>
                               </span>
                             ) : (
                               <span>Unassigned</span>
@@ -404,11 +404,11 @@ const ProjectDetail = () => {
                 <div key={m.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-sm font-medium text-primary-foreground">
-                      {(m.profiles?.full_name || m.profiles?.email || "?").slice(0, 1).toUpperCase()}
+                      {(m.profile?.full_name || m.profile?.email || "?").slice(0, 1).toUpperCase()}
                     </div>
                     <div>
-                      <div className="text-sm font-medium">{m.profiles?.full_name ?? m.profiles?.email}</div>
-                      <div className="text-xs text-muted-foreground">{m.profiles?.email}</div>
+                      <div className="text-sm font-medium">{m.profile?.full_name ?? m.profile?.email}</div>
+                      <div className="text-xs text-muted-foreground">{m.profile?.email}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -500,7 +500,7 @@ const ProjectDetail = () => {
                     <SelectItem value="none">Unassigned</SelectItem>
                     {members.map((m) => (
                       <SelectItem key={m.user_id} value={m.user_id}>
-                        {m.profiles?.full_name ?? m.profiles?.email}
+                        {m.profile?.full_name ?? m.profile?.email}
                       </SelectItem>
                     ))}
                   </SelectContent>
