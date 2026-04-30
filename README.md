@@ -492,6 +492,5 @@ Built with:
 
 **[SETUP →](./SETUP.md)** | **[API DOCS →](./API_DOCUMENTATION.md)** | **[DATABASE →](./DATABASE_CONNECTION.md)**
 
-Made with ❤️ by the Stack team
 
 </div>
