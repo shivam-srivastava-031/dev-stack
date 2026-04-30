@@ -11,7 +11,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package*.json ./
-COPY --from=build /app/server ./server
+COPY --from=build /app/server.js ./server.js
 RUN npm install --production
 EXPOSE 8080
-CMD ["node", "server/server.js"]
+CMD ["node", "server.js"]
