@@ -31,12 +31,24 @@ const Dashboard = () => {
       const [{ data: t }, { count }] = await Promise.all([
         supabase
           .from("tasks")
-          .select("id, title, status, priority, due_date, project_id, projects(name)")
+          .select("id, title, status, priority, due_date, project_id")
           .eq("assignee_id", user.id)
           .order("due_date", { ascending: true, nullsFirst: false }),
         supabase.from("project_members").select("*", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
-      setTasks((t as TaskRow[]) ?? []);
+
+      let tasksWithProject = (t as any[]) ?? [];
+      if (tasksWithProject.length) {
+        const projectIds = [...new Set(tasksWithProject.map(task => task.project_id))];
+        const { data: projs } = await supabase.from("projects").select("id, name").in("id", projectIds);
+        const projsById = Object.fromEntries((projs ?? []).map(p => [p.id, p]));
+        tasksWithProject = tasksWithProject.map(task => ({
+          ...task,
+          projects: projsById[task.project_id] || null
+        }));
+      }
+
+      setTasks(tasksWithProject as TaskRow[]);
       setProjectCount(count ?? 0);
       setLoading(false);
     })();
