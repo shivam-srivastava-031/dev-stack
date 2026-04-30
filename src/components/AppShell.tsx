@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FolderKanban, LogOut, Layers } from "lucide-react";
+import { LayoutDashboard, FolderKanban, LogOut, Layers, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,15 +11,14 @@ const navItems = [
 ];
 
 export const AppShell = ({ children }: { children: ReactNode }) => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
   };
-
-  const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
+  const initials = (profile?.full_name || user?.email || "?").slice(0, 2).toUpperCase();
+  const isSuperAdmin = profile?.global_role === "super_admin";
 
   return (
     <div className="min-h-screen bg-background">
@@ -27,10 +26,12 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
       <header className="relative z-10 border-b border-border/60 bg-card/40 backdrop-blur-xl">
         <div className="container flex h-16 items-center justify-between gap-6">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-              <Layers className="h-4 w-4 text-primary-foreground" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary shadow-glow ring-1 ring-white/20">
+              <Layers className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold tracking-tight">Stack</span>
+            <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+              Harmony Hub
+            </span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => (
@@ -53,12 +54,24 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
           </nav>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-2 sm:flex">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-xs font-medium">
-                {initials}
+              {isSuperAdmin && (
+                <div className="flex items-center gap-1.5 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning ring-1 ring-warning/30">
+                  <Crown className="h-3 w-3" /> Admin
+                </div>
+              )}
+              <div className="flex flex-col items-end mr-1">
+                <span className="text-sm font-medium text-foreground">{profile?.full_name || user?.email?.split('@')[0]}</span>
+                <span className="text-[10px] text-muted-foreground">Active Hub</span>
               </div>
-              <span className="text-sm text-muted-foreground">{user?.email}</span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary border border-border/40 text-xs font-semibold shadow-sm overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
+              </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sign out">
+            <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sign out" className="hover:bg-destructive/10 hover:text-destructive">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>

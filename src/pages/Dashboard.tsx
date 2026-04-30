@@ -90,41 +90,69 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <Card className="mb-8 border-border/60 bg-card/60 backdrop-blur-xl">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Task Status Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-3 w-full overflow-hidden rounded-full bg-secondary/60">
-            <div 
-              className="bg-primary-glow transition-all duration-500" 
-              style={{ width: `${tasks.length ? (tasks.filter(t => t.status === 'in_progress').length / tasks.length) * 100 : 0}%` }}
-              title="In Progress"
-            />
-            <div 
-              className="bg-success transition-all duration-500" 
-              style={{ width: `${tasks.length ? (tasks.filter(t => t.status === 'done').length / tasks.length) * 100 : 0}%` }}
-              title="Done"
-            />
-            <div 
-              className="bg-muted-foreground/30 transition-all duration-500" 
-              style={{ width: `${tasks.length ? (tasks.filter(t => t.status === 'todo').length / tasks.length) * 100 : 0}%` }}
-              title="Todo"
-            />
-          </div>
-          <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <div className="h-2 w-2 rounded-full bg-muted-foreground/30" /> Todo
+      <div className="grid gap-6 md:grid-cols-2 mb-8">
+        <Card className="border-border/60 bg-card/60 backdrop-blur-xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Task Distribution</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center pt-4">
+            <div className="relative mb-6 flex h-32 w-32 items-center justify-center">
+              <div 
+                className="absolute inset-0 rounded-full border-[10px] border-secondary/40"
+                style={{
+                  background: `conic-gradient(
+                    hsl(var(--primary)) 0% ${tasks.length ? (tasks.filter(t => t.status === 'in_progress').length / tasks.length) * 100 : 0}%,
+                    #10b981 ${tasks.length ? (tasks.filter(t => t.status === 'in_progress').length / tasks.length) * 100 : 0}% ${tasks.length ? ((tasks.filter(t => t.status === 'in_progress').length + tasks.filter(t => t.status === 'done').length) / tasks.length) * 100 : 0}%,
+                    hsl(var(--muted-foreground)) ${tasks.length ? ((tasks.filter(t => t.status === 'in_progress').length + tasks.filter(t => t.status === 'done').length) / tasks.length) * 100 : 0}% 100%
+                  )`,
+                  mask: 'radial-gradient(transparent 58%, black 60%)',
+                  WebkitMask: 'radial-gradient(transparent 58%, black 60%)'
+                }}
+              />
+              <div className="text-center">
+                <div className="text-2xl font-bold">{tasks.length}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="h-2 w-2 rounded-full bg-primary-glow" /> In Progress
+            <div className="grid w-full grid-cols-3 gap-2">
+              <div className="rounded-lg bg-secondary/30 p-2 text-center">
+                <div className="text-sm font-semibold">{tasks.filter(t => t.status === 'todo').length}</div>
+                <div className="text-[10px] text-muted-foreground">Todo</div>
+              </div>
+              <div className="rounded-lg bg-primary/10 p-2 text-center border border-primary/20">
+                <div className="text-sm font-semibold text-primary">{tasks.filter(t => t.status === 'in_progress').length}</div>
+                <div className="text-[10px] text-muted-foreground">Active</div>
+              </div>
+              <div className="rounded-lg bg-success/10 p-2 text-center border border-success/20">
+                <div className="text-sm font-semibold text-success">{tasks.filter(t => t.status === 'done').length}</div>
+                <div className="text-[10px] text-muted-foreground">Done</div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="h-2 w-2 rounded-full bg-success" /> Done
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60 bg-card/60 backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            <Link to="/projects">
+              <Button variant="outline" className="w-full justify-start gap-2 bg-secondary/20 border-border/40">
+                <FolderKanban className="h-4 w-4 text-primary" /> Create New Project
+              </Button>
+            </Link>
+            <Button variant="outline" className="w-full justify-start gap-2 bg-secondary/20 border-border/40" onClick={() => toast.info("Profile settings coming soon!")}>
+              <UserIcon className="h-4 w-4 text-primary" /> Update My Profile
+            </Button>
+            <div className="mt-4 rounded-xl bg-gradient-primary/10 p-4 border border-primary/20">
+              <div className="text-xs font-medium text-primary mb-1">Harmony Tip</div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Stay on top of your deadlines by checking the "Overdue" panel. Tasks assigned to you appear here automatically.
+              </p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="border-border/60 bg-card/60 backdrop-blur-xl">

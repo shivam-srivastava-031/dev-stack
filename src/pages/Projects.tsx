@@ -30,7 +30,7 @@ const projectSchema = z.object({
 });
 
 const Projects = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -38,15 +38,33 @@ const Projects = () => {
 
   const fetchProjects = async () => {
     if (!user) return;
-    const { data, error } = await supabase
-      .from("project_members")
-      .select("role, projects(id, name, description, created_at)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error(error.message);
+    
+    // If super admin, fetch ALL projects
+    if (profile?.global_role === "super_admin") {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, name, description, created_at")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        // Map to Row format
+        setRows((data?.map(p => ({ role: "admin" as const, projects: p })) as Row[]) ?? []);
+      }
     } else {
-      setRows((data as Row[]) ?? []);
+      // Normal member fetching
+      const { data, error } = await supabase
+        .from("project_members")
+        .select("role, projects(id, name, description, created_at)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        setRows((data as Row[]) ?? []);
+      }
     }
     setLoading(false);
   };
@@ -89,7 +107,11 @@ const Projects = () => {
       <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>
-          <p className="mt-1 text-sm text-muted-foreground">All projects you're a member of.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {profile?.global_role === "super_admin" 
+              ? "System-wide project overview (Super Admin Mode)" 
+              : "All projects you're a member of."}
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
