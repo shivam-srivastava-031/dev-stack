@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Clock, AlertTriangle, ListTodo, ArrowRight } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, ListTodo, ArrowRight, FolderKanban, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TaskStatusBadge } from "@/components/TaskStatusBadge";
 import { format, isPast } from "date-fns";
+import { toast } from "sonner";
 
 type TaskRow = {
   id: string;
@@ -37,7 +39,7 @@ const Dashboard = () => {
         supabase.from("project_members").select("*", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
 
-      let tasksWithProject = (t as any[]) ?? [];
+      let tasksWithProject = (t as TaskRow[]) ?? [];
       if (tasksWithProject.length) {
         const projectIds = [...new Set(tasksWithProject.map(task => task.project_id))];
         const { data: projs } = await supabase.from("projects").select("id, name").in("id", projectIds);

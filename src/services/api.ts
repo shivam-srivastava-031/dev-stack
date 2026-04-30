@@ -20,7 +20,7 @@ export const handleApiError = (error: unknown): string => {
 
 // Generic fetch wrapper for Supabase queries
 export const executeQuery = async <T>(
-  fn: () => Promise<{ data: T | null; error: any }>
+  fn: () => Promise<{ data: T | null; error: { message: string; status?: number } | null }>
 ): Promise<ApiResponse<T>> => {
   try {
     const { data, error } = await fn();

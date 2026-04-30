@@ -20,8 +20,8 @@ console.log(`[INFO] Static directory: ${distPath}`);
 // Serve static files
 app.use(express.static(distPath));
 
-// Handle SPA routing
-app.get('*', (req, res) => {
+// Handle SPA routing - Catch-all
+app.use((req, res) => {
   const indexPath = path.join(distPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);

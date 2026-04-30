@@ -21,8 +21,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("full_name, avatar_url, global_role").eq("id", userId).single();
-    setProfile(data as Profile);
+    try {
+      // Fetch core fields first to ensure it doesn't crash if global_role is missing
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      // Try to fetch global_role separately or just default to 'user'
+      const { data: roleData } = await supabase
+        .from("profiles")
+        .select("global_role")
+        .eq("id", userId)
+        .maybeSingle();
+
+      setProfile({
+        full_name: data?.full_name ?? null,
+        avatar_url: data?.avatar_url ?? null,
+        global_role: (roleData as { global_role: string | null } | null)?.global_role ?? "user"
+      });
+    } catch (err) {
+      console.warn("Profile fetch incomplete:", err);
+      // Fallback to basic profile so app doesn't crash
+      setProfile({ full_name: null, avatar_url: null, global_role: "user" });
+    }
   };
 
   useEffect(() => {

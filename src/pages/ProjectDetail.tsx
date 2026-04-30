@@ -118,7 +118,7 @@ const ProjectDetail = () => {
     }
     const memberRows = (m as { id: string; user_id: string; role: "admin" | "member" }[]) ?? [];
     const userIds = memberRows.map((r) => r.user_id);
-    let profilesById: Record<string, { full_name: string | null; email: string | null; avatar_url: string | null }> = {};
+    const profilesById: Record<string, { full_name: string | null; email: string | null; avatar_url: string | null }> = {};
     if (userIds.length) {
       const { data: profs, error: profsErr } = await supabase
         .from("profiles")
