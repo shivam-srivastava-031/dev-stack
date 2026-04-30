@@ -9,12 +9,11 @@ RUN npm run build
 # Production stage
 FROM node:20-alpine
 WORKDIR /app
-# Explicitly copy the entire dist directory
 COPY --from=build /app/dist /app/dist
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/server.js ./server.js
 RUN npm install --production
-# Ensure the server uses the PORT environment variable provided by Railway
-ENV PORT=8080
+# Do NOT hardcode PORT here; Railway provides it automatically.
+# EXPOSE is still useful as a hint.
 EXPOSE 8080
 CMD ["node", "server.js"]
