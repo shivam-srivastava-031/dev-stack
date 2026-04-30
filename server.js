@@ -8,6 +8,11 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Health check for Railway
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Use PORT from environment variable (Railway/Heroku default) or 5000 as fallback
 const PORT = process.env.PORT || 5000;
 
