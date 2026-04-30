@@ -89,7 +89,7 @@ const Auth = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
@@ -102,8 +102,13 @@ const Auth = () => {
       toast.error(friendlyAuthError(error));
       return;
     }
-    toast.success("Account created! You're signed in.");
-    navigate("/dashboard");
+    
+    if (data.session) {
+      toast.success("Account created! You're signed in.");
+      navigate("/dashboard");
+    } else {
+      toast.success("Account created! Please check your email to confirm your account.");
+    }
   };
 
   const handleForgot = async (e: React.FormEvent<HTMLFormElement>) => {

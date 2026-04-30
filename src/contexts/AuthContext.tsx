@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type Profile = { full_name: string | null; avatar_url: string | null; global_role: string | null };
+type Profile = { full_name: string | null; avatar_url: string | null; role: string | null };
 
 type AuthContextValue = {
   user: User | null;
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      // Fetch core fields first to ensure it doesn't crash if global_role is missing
+      // Fetch core fields first to ensure it doesn't crash if role is missing
       const { data, error } = await supabase
         .from("profiles")
         .select("full_name, avatar_url")
@@ -31,22 +31,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       
-      // Try to fetch global_role separately or just default to 'user'
+      // Try to fetch role separately or just default to 'user'
       const { data: roleData } = await supabase
         .from("profiles")
-        .select("global_role")
+        .select("role")
         .eq("id", userId)
         .maybeSingle();
 
       setProfile({
         full_name: data?.full_name ?? null,
         avatar_url: data?.avatar_url ?? null,
-        global_role: (roleData as { global_role: string | null } | null)?.global_role ?? "user"
+        role: (roleData as { role: string | null } | null)?.role ?? "user"
       });
     } catch (err) {
       console.warn("Profile fetch incomplete:", err);
       // Fallback to basic profile so app doesn't crash
-      setProfile({ full_name: null, avatar_url: null, global_role: "user" });
+      setProfile({ full_name: null, avatar_url: null, role: "user" });
     }
   };
 

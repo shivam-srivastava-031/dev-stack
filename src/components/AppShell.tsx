@@ -18,7 +18,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
     navigate("/auth");
   };
   const initials = (profile?.full_name || user?.email || "?").slice(0, 2).toUpperCase();
-  const isSuperAdmin = profile?.global_role === "super_admin";
+  const isSuperAdmin = profile?.role === "super_admin";
 
   return (
     <div className="min-h-screen bg-background">

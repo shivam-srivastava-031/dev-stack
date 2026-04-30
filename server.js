@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Health check for Railway
-app.get('/health', (req, res) => {
+app.all('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
@@ -28,9 +28,18 @@ app.use(express.static(distPath));
 // Handle SPA routing - Catch-all
 app.use((req, res) => {
   const indexPath = path.join(distPath, 'index.html');
+  console.log(`[INFO] Catch-all route hit: ${req.url}`);
   if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error('[ERROR] res.sendFile failed:', err);
+        if (!res.headersSent) {
+          res.status(500).send('Internal Server Error');
+        }
+      }
+    });
   } else {
+    console.error(`[ERROR] Build not found at ${indexPath}`);
     res.status(404).send('Build not found. Check deployment logs.');
   }
 });

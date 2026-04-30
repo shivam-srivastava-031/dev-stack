@@ -40,7 +40,7 @@ const Projects = () => {
     if (!user) return;
     
     // If super admin, fetch ALL projects
-    if (profile?.global_role === "super_admin") {
+    if (profile?.role === "super_admin") {
       const { data, error } = await supabase
         .from("projects")
         .select("id, name, description, created_at")
@@ -108,7 +108,7 @@ const Projects = () => {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {profile?.global_role === "super_admin" 
+            {profile?.role === "super_admin" 
               ? "System-wide project overview (Super Admin Mode)" 
               : "All projects you're a member of."}
           </p>
