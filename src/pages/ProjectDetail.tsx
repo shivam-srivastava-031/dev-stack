@@ -27,7 +27,7 @@ type Member = {
   id: string;
   user_id: string;
   role: "admin" | "member";
-  profiles: { full_name: string | null; email: string | null; avatar_url: string | null } | null;
+  profile: { full_name: string | null; email: string | null; avatar_url: string | null } | null;
 };
 type Task = {
   id: string;
@@ -73,7 +73,7 @@ const ProjectDetail = () => {
       supabase.from("projects").select("id, name, description, owner_id").eq("id", id).maybeSingle(),
       supabase
         .from("project_members")
-        .select("id, user_id, role, profiles(full_name, email, avatar_url)")
+        .select("id, user_id, role")
         .eq("project_id", id),
       supabase
         .from("tasks")
@@ -86,8 +86,20 @@ const ProjectDetail = () => {
       navigate("/projects");
       return;
     }
+    const memberRows = (m as { id: string; user_id: string; role: "admin" | "member" }[]) ?? [];
+    const userIds = memberRows.map((r) => r.user_id);
+    let profilesById: Record<string, Member["profile"]> = {};
+    if (userIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .in("id", userIds);
+      (profs ?? []).forEach((p) => {
+        profilesById[p.id] = { full_name: p.full_name, email: p.email, avatar_url: p.avatar_url };
+      });
+    }
     setProject(p as Project);
-    setMembers((m as Member[]) ?? []);
+    setMembers(memberRows.map((r) => ({ ...r, profile: profilesById[r.user_id] ?? null })));
     setTasks((t as Task[]) ?? []);
     setLoading(false);
   };
