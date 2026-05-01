@@ -4,7 +4,7 @@
 DROP POLICY IF EXISTS "Profiles: super admin select all" ON public.profiles;
 CREATE POLICY "Profiles: super admin select all" ON public.profiles
   FOR SELECT TO authenticated USING (
-    (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'super_admin'
+    public.is_super_admin()
   );
 
 -- 2. Allow authenticated users to search for others by email (for invitations)
@@ -20,12 +20,12 @@ CREATE POLICY "Profiles: search by email" ON public.profiles
 DROP POLICY IF EXISTS "Projects: super admin all" ON public.projects;
 CREATE POLICY "Projects: super admin all" ON public.projects
   FOR ALL TO authenticated USING (
-    (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'super_admin'
+    public.is_super_admin()
   );
 
 -- 4. Update Tasks RLS for Super Admin full access
 DROP POLICY IF EXISTS "Tasks: super admin all" ON public.tasks;
 CREATE POLICY "Tasks: super admin all" ON public.tasks
   FOR ALL TO authenticated USING (
-    (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'super_admin'
+    public.is_super_admin()
   );
