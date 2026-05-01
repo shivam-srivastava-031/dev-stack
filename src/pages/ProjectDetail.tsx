@@ -75,6 +75,8 @@ const ProjectDetail = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [updatingProject, setUpdatingProject] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
 
   const { profile } = useAuth();
   const isSuperAdmin = profile?.role === "super_admin";
@@ -477,30 +479,14 @@ const ProjectDetail = () => {
                               ))}
                             </div>
                             {checkPermission("delete_task", task) && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete task?</AlertDialogTitle>
-                                    <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteTask(task.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                onClick={(e) => { e.stopPropagation(); setTaskToDelete(task.id); }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
                             )}
                           </div>
                         )}
@@ -588,23 +574,9 @@ const ProjectDetail = () => {
                       </Badge>
                     )}
                     {isAdmin && m.user_id !== project.owner_id && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Remove member?</AlertDialogTitle>
-                            <AlertDialogDescription>They will lose access to this project.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleRemoveMember(m.id)}>Remove</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setMemberToRemove(m.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -773,6 +745,36 @@ const ProjectDetail = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!taskToDelete} onOpenChange={(o) => { if (!o) setTaskToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete task?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (taskToDelete) handleDeleteTask(taskToDelete); setTaskToDelete(null); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!memberToRemove} onOpenChange={(o) => { if (!o) setMemberToRemove(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove member?</AlertDialogTitle>
+            <AlertDialogDescription>They will lose access to this project.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (memberToRemove) handleRemoveMember(memberToRemove); setMemberToRemove(null); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 };
