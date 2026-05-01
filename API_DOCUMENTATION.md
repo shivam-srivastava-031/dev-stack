@@ -1,8 +1,8 @@
-# Stack — REST API & Database Documentation
+# Harmony Hub — REST API & Database Documentation
 
 ## Overview
 
-Stack is built with a comprehensive REST API layer on top of **Supabase (PostgreSQL)** for all data persistence and real-time capabilities.
+Harmony Hub is built with a comprehensive REST API layer on top of **Supabase (PostgreSQL)** for all data persistence and real-time capabilities.
 
 ## Database Architecture
 

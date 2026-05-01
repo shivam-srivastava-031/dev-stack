@@ -76,12 +76,14 @@ const ProjectDetail = () => {
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [updatingProject, setUpdatingProject] = useState(false);
 
+  const { profile } = useAuth();
+  const isSuperAdmin = profile?.role === "super_admin";
   const myRole = useMemo(
     () => members.find((m) => m.user_id === user?.id)?.role,
     [members, user]
   );
-  const isAdmin = myRole === "admin";
-  const isOwner = project?.owner_id === user?.id;
+  const isAdmin = myRole === "admin" || isSuperAdmin;
+  const isOwner = project?.owner_id === user?.id || isSuperAdmin;
 
   const checkPermission = (action: "edit_project" | "delete_project" | "manage_members" | "delete_task" | "edit_task", task?: Task) => {
     if (action === "delete_project") return isOwner;
@@ -206,8 +208,8 @@ const ProjectDetail = () => {
       assignee_id: parsed.data.assignee_id && parsed.data.assignee_id !== "none" ? parsed.data.assignee_id : null,
     };
     
-    // Safety check: ensure assignee is a member
-    if (payload.assignee_id && !members.some(m => m.user_id === payload.assignee_id)) {
+    // Safety check: ensure assignee is a member (Skip for super admin as they can bypass)
+    if (!isSuperAdmin && payload.assignee_id && !members.some(m => m.user_id === payload.assignee_id)) {
       toast.error("Assignee must be a member of this project");
       return;
     }

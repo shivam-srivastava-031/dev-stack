@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Clock, AlertTriangle, ListTodo, ArrowRight, FolderKanban, User as UserIcon } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, ListTodo, ArrowRight, FolderKanban, User as UserIcon, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/AppShell";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { TaskStatusBadge } from "@/components/TaskStatusBadge";
 import { format, isPast } from "date-fns";
 import { toast } from "sonner";
+import { DiagnosticTool } from "@/components/DiagnosticTool";
 
 type TaskRow = {
   id: string;
@@ -22,7 +23,8 @@ type TaskRow = {
 };
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isSuperAdmin = profile?.role === "super_admin";
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [projectCount, setProjectCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -70,10 +72,21 @@ const Dashboard = () => {
   return (
     <AppShell>
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Welcome back, {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "there"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">Here's what's happening across your projects.</p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Welcome back, {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "there"}
+          </h1>
+          {isSuperAdmin && (
+            <Badge className="bg-warning/20 text-warning border-warning/30 gap-1.5 py-1">
+              <Crown className="h-3.5 w-3.5" /> System Admin
+            </Badge>
+          )}
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {isSuperAdmin 
+            ? "You are in System Administration mode. All projects are visible." 
+            : "Here's what's happening across your projects."}
+        </p>
       </div>
 
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -146,6 +159,9 @@ const Dashboard = () => {
             <Button variant="outline" className="w-full justify-start gap-2 bg-secondary/20 border-border/40" onClick={() => toast.info("Profile settings coming soon!")}>
               <UserIcon className="h-4 w-4 text-primary" /> Update My Profile
             </Button>
+            
+            {isSuperAdmin && <div className="mt-2"><DiagnosticTool /></div>}
+
             <div className="mt-4 rounded-xl bg-gradient-primary/10 p-4 border border-primary/20">
               <div className="text-xs font-medium text-primary mb-1">Harmony Tip</div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
