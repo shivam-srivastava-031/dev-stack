@@ -1,4 +1,4 @@
-# 📊 Harmony Hub — Project & Task Management
+# 📊 Stack — Project & Task Management
 
 A modern, full-stack team collaboration platform for planning projects, assigning tasks, and tracking progress with advanced role-based access control and interactive visualizations.
 
@@ -61,7 +61,7 @@ A modern, full-stack team collaboration platform for planning projects, assignin
 ```bash
 # Clone repository
 git clone <your-repo-url>
-cd project-harmony-hub
+cd stack
 
 # Install dependencies
 npm install
@@ -96,7 +96,7 @@ Visit `http://localhost:5173` in your browser.
 ## 📁 Project Structure
 
 ```
-project-harmony-hub/
+stack/
 ├── src/
 │   ├── components/
 │   │   ├── ui/                    # shadcn/ui components
@@ -138,7 +138,7 @@ project-harmony-hub/
 
 ## 🔌 REST API
 
-Harmony Hub provides a **complete REST API layer** built on top of Supabase:
+Stack provides a **complete REST API layer** built on top of Supabase:
 
 ### Example Usage
 
@@ -184,7 +184,7 @@ All tables have **Row-Level Security (RLS)** policies enabled to ensure data iso
 
 ### Deploy to Railway (Production)
 
-Harmony Hub is configured for seamless deployment to **Railway**:
+Stack is configured for seamless deployment to **Railway**:
 
 1.  Connect your GitHub repository to Railway.
 2.  The platform will automatically detect `railway.json` and use `node server.js` as the start command.
@@ -225,7 +225,7 @@ DATABASE_URL=postgresql://...
 DIRECT_URL=postgresql://...
 
 # Application
-VITE_APP_NAME="Harmony Hub"
+VITE_APP_NAME="Stack"
 VITE_APP_ENV=production
 ```
 

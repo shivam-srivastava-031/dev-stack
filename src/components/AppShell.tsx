@@ -30,7 +30,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               <Layers className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-xl font-bold tracking-tight text-transparent">
-              Harmony Hub
+              Stack
             </span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
@@ -61,7 +61,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               )}
               <div className="flex flex-col items-end mr-1">
                 <span className="text-sm font-medium text-foreground">{profile?.full_name || user?.email?.split('@')[0]}</span>
-                <span className="text-[10px] text-muted-foreground">Active Hub</span>
+                <span className="text-[10px] text-muted-foreground">Active Stack</span>
               </div>
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary border border-border/40 text-xs font-semibold shadow-sm overflow-hidden">
                 {profile?.avatar_url ? (

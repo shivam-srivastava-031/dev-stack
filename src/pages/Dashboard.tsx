@@ -163,7 +163,7 @@ const Dashboard = () => {
             {isSuperAdmin && <div className="mt-2"><DiagnosticTool /></div>}
 
             <div className="mt-4 rounded-xl bg-gradient-primary/10 p-4 border border-primary/20">
-              <div className="text-xs font-medium text-primary mb-1">Harmony Tip</div>
+              <div className="text-xs font-medium text-primary mb-1">Stack Tip</div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Stay on top of your deadlines by checking the "Overdue" panel. Tasks assigned to you appear here automatically.
               </p>
