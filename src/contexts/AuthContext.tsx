@@ -31,17 +31,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       
-      // Try to fetch role separately or just default to 'user'
-      const { data: roleData } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .maybeSingle();
-
+      // `role` column doesn't exist on profiles — default everyone to 'user'.
       setProfile({
         full_name: data?.full_name ?? null,
         avatar_url: data?.avatar_url ?? null,
-        role: (roleData as { role: string | null } | null)?.role ?? "user"
+        role: "user",
       });
     } catch (err) {
       console.warn("Profile fetch incomplete:", err);
