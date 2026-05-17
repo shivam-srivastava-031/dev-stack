@@ -337,6 +337,11 @@ const ProjectDetail = () => {
 
   return (
     <AppShell>
+      <Seo
+        title={`${project.name} — Stack`}
+        description={project.description?.slice(0, 160) || `Manage tasks, members, and progress for the ${project.name} project on Stack.`}
+        path={`/projects/${project.id}`}
+      />
       <Link to="/projects" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> All projects
       </Link>
