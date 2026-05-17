@@ -156,6 +156,11 @@ const Auth = () => {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
+      <Seo
+        title="Sign in or sign up — Stack"
+        description="Sign in to Stack with email and password or Google to access your project and task workspace."
+        path="/auth"
+      />
       <div className="pointer-events-none absolute inset-0 bg-gradient-glow" />
       <Button
         type="button"
