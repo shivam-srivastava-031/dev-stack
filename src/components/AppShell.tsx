@@ -65,7 +65,11 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               </div>
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary border border-border/40 text-xs font-semibold shadow-sm overflow-hidden">
                 {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                  <img
+                    src={profile.avatar_url}
+                    alt={`${profile?.full_name || user?.email || "User"} profile avatar`}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   initials
                 )}

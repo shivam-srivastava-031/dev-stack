@@ -483,6 +483,7 @@ const ProjectDetail = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                aria-label={`Delete task ${task.title}`}
                                 onClick={(e) => { e.stopPropagation(); setTaskToDelete(task.id); }}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -574,7 +575,13 @@ const ProjectDetail = () => {
                       </Badge>
                     )}
                     {isAdmin && m.user_id !== project.owner_id && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setMemberToRemove(m.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        aria-label={`Remove member ${m.profile?.full_name ?? m.profile?.email ?? ""}`}
+                        onClick={() => setMemberToRemove(m.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
