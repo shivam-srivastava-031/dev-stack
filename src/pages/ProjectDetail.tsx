@@ -22,6 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { Seo } from "@/components/Seo";
 
 type Project = { id: string; name: string; description: string | null; owner_id: string };
 type Member = {

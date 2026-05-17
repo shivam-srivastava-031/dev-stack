@@ -11,6 +11,7 @@ import { TaskStatusBadge } from "@/components/TaskStatusBadge";
 import { format, isPast } from "date-fns";
 import { toast } from "sonner";
 import { DiagnosticTool } from "@/components/DiagnosticTool";
+import { Seo } from "@/components/Seo";
 
 type TaskRow = {
   id: string;
@@ -71,6 +72,11 @@ const Dashboard = () => {
 
   return (
     <AppShell>
+      <Seo
+        title="Dashboard — Stack"
+        description="Your project and task overview: open work, overdue items, and progress across all your Stack projects."
+        path="/dashboard"
+      />
       <div className="mb-8">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-semibold tracking-tight">

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { friendlyAuthError } from "@/lib/authErrors";
+import { Seo } from "@/components/Seo";
 
 const signInSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
