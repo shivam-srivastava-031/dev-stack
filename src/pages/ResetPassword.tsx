@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { friendlyAuthError } from "@/lib/authErrors";
+import { Seo } from "@/components/Seo";
 
 const passwordSchema = z
   .object({
@@ -70,6 +71,11 @@ const ResetPassword = () => {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
+      <Seo
+        title="Reset password — Stack"
+        description="Choose a new password to regain access to your Stack workspace."
+        path="/reset-password"
+      />
       <div className="pointer-events-none absolute inset-0 bg-gradient-glow" />
       <Button
         type="button"

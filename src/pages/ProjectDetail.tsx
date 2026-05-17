@@ -22,6 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { Seo } from "@/components/Seo";
 
 type Project = { id: string; name: string; description: string | null; owner_id: string };
 type Member = {
@@ -336,6 +337,11 @@ const ProjectDetail = () => {
 
   return (
     <AppShell>
+      <Seo
+        title={`${project.name} — Stack`}
+        description={project.description?.slice(0, 160) || `Manage tasks, members, and progress for the ${project.name} project on Stack.`}
+        path={`/projects/${project.id}`}
+      />
       <Link to="/projects" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> All projects
       </Link>
@@ -483,6 +489,7 @@ const ProjectDetail = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                aria-label={`Delete task ${task.title}`}
                                 onClick={(e) => { e.stopPropagation(); setTaskToDelete(task.id); }}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -574,7 +581,13 @@ const ProjectDetail = () => {
                       </Badge>
                     )}
                     {isAdmin && m.user_id !== project.owner_id && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setMemberToRemove(m.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        aria-label={`Remove member ${m.profile?.full_name ?? m.profile?.email ?? ""}`}
+                        onClick={() => setMemberToRemove(m.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { friendlyAuthError } from "@/lib/authErrors";
+import { Seo } from "@/components/Seo";
 
 const signInSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
@@ -155,6 +156,11 @@ const Auth = () => {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
+      <Seo
+        title="Sign in or sign up — Stack"
+        description="Sign in to Stack with email and password or Google to access your project and task workspace."
+        path="/auth"
+      />
       <div className="pointer-events-none absolute inset-0 bg-gradient-glow" />
       <Button
         type="button"

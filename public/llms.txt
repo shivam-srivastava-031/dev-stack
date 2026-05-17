@@ -1,0 +1,14 @@
+# Stack
+
+> A modern team collaboration platform for planning projects, assigning tasks, and tracking progress with role-based access (Admin / Member).
+
+Stack helps small teams organize work into projects with a kanban-style task board, due dates, priorities, and per-project membership.
+
+## Pages
+
+- [Home](/): Product overview and entry point to sign in.
+- [Sign in / Sign up](/auth): Email + password or Google authentication.
+
+## Optional
+
+- [Reset password](/reset-password): Password recovery flow (link sent via email).

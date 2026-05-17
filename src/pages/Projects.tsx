@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Seo } from "@/components/Seo";
 
 type Row = {
   role: "admin" | "member";
@@ -104,6 +105,11 @@ const Projects = () => {
 
   return (
     <AppShell>
+      <Seo
+        title="Projects — Stack"
+        description="Browse and manage all projects you're a member of. Create new projects and jump into team task boards."
+        path="/projects"
+      />
       <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>

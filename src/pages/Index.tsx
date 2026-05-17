@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Layers, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Seo } from "@/components/Seo";
 
 const features = [
   { icon: Layers, title: "Projects & tasks", desc: "Organize work into projects with a clean kanban board." },
@@ -14,6 +15,11 @@ const Index = () => {
   const { user } = useAuth();
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
+      <Seo
+        title="Stack — Project & Task Management for Teams"
+        description="Plan projects, assign tasks, and track progress with role-based access. A focused workspace for teams to ship faster, together."
+        path="/"
+      />
       <div className="pointer-events-none absolute inset-0 bg-gradient-glow" />
       <header className="container relative z-10 flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
